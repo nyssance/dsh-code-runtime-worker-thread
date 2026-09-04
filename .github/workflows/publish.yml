@@ -33,11 +33,11 @@ jobs:
           case "$version" in *-*) tag=next ;; *) tag=latest ;; esac
           echo "publishing $name@$version (dist-tag $tag)"
           echo "NPM_DIST_TAG=$tag" >> "$GITHUB_ENV"
-      # bun publish cannot use npm trusted publishing (OIDC); npm 11.5+ can.
+      # npm trusted publishing (OIDC, configured on the package's npm settings page):
+      # no token anywhere — id-token: write above is the whole credential. bun publish
+      # cannot do OIDC; npm 11.5+ (bundled with Node 24) can.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - run: npm publish ./dist/*.tgz --provenance --access public --tag "$NPM_DIST_TAG"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
