@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
     inputs:
       upstream_version:
-        description: Upstream version (default: UPSTREAM_VERSION)
+        description: "Upstream version (default: UPSTREAM_VERSION)"
         required: false
 permissions:
   contents: read
