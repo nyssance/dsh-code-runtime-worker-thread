@@ -29,12 +29,15 @@ jobs:
             echo "$name@$version is already on npm; bump UPSTREAM_VERSION instead" >&2
             exit 1
           fi
-          echo "publishing $name@$version"
+          # prerelease versions need an explicit dist-tag; mirror upstream (rc → next)
+          case "$version" in *-*) tag=next ;; *) tag=latest ;; esac
+          echo "publishing $name@$version (dist-tag $tag)"
+          echo "NPM_DIST_TAG=$tag" >> "$GITHUB_ENV"
       # bun publish cannot use npm trusted publishing (OIDC); npm 11.5+ can.
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
-      - run: npm publish ./dist/*.tgz --provenance --access public
+      - run: npm publish ./dist/*.tgz --provenance --access public --tag "$NPM_DIST_TAG"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
