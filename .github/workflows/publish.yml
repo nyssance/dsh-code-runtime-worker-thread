@@ -1,0 +1,40 @@
+name: Publish
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      upstream_version:
+        description: Upstream version (default: UPSTREAM_VERSION)
+        required: false
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6
+        with:
+          bun-version: 1.4.0
+      - run: bun build.ts ${{ inputs.upstream_version }}
+      - name: Refuse to republish an existing version
+        run: |
+          set -euo pipefail
+          tgz=$(ls dist/*.tgz)
+          name=$(tar -xOzf "$tgz" package/package.json | python3 -c 'import json,sys;print(json.load(sys.stdin)["name"])')
+          version=$(tar -xOzf "$tgz" package/package.json | python3 -c 'import json,sys;print(json.load(sys.stdin)["version"])')
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "$name@$version is already on npm; bump UPSTREAM_VERSION instead" >&2
+            exit 1
+          fi
+          echo "publishing $name@$version"
+      # bun publish cannot use npm trusted publishing (OIDC); npm 11.5+ can.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - run: npm publish dist/*.tgz --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

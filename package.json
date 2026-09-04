@@ -1,0 +1,9 @@
+{
+  "name": "dsh-code-runtime-worker-thread-fork",
+  "private": true,
+  "description": "Build/publish tooling for @nyssance/dsh-code-runtime-worker-thread (upstream artifact + Bun TypeScript-stripping fallback)",
+  "type": "module",
+  "scripts": {
+    "build": "bun build.ts"
+  }
+}
