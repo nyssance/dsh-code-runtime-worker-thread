@@ -38,19 +38,20 @@ jobs:
           set -euo pipefail
           smoke=$(mktemp -d)
           trap 'rm -rf "$smoke"' EXIT
-          tar -xzf "$PACKAGE_TARBALL" -C "$smoke"
-          (cd "$smoke/package" && npm install --ignore-scripts --omit=dev --no-audit --no-fund)
-          node runtime-smoke.mjs "$smoke/package" | tee "$smoke/node-runtime.log"
+          # Install as a consumer: upstream lists its peers as devDependencies too.
+          npm install --prefix "$smoke" --ignore-scripts --omit=dev --no-audit --no-fund "$PWD/$PACKAGE_TARBALL"
+          worker="$smoke/node_modules/@nyssance/dsh-code-runtime-worker-thread"
+          node runtime-smoke.mjs "$worker" | tee "$smoke/node-runtime.log"
           grep -qx "SMOKE_COMPLETE runtime" "$smoke/node-runtime.log"
-          bun runtime-smoke.mjs "$smoke/package" | tee "$smoke/bun-runtime.log"
+          bun runtime-smoke.mjs "$worker" | tee "$smoke/bun-runtime.log"
           grep -qx "SMOKE_COMPLETE runtime" "$smoke/bun-runtime.log"
-          node lifecycle-smoke.mjs "$smoke/package" | tee "$smoke/node-lifecycle.log"
+          node lifecycle-smoke.mjs "$worker" | tee "$smoke/node-lifecycle.log"
           grep -qx "SMOKE_COMPLETE lifecycle" "$smoke/node-lifecycle.log"
-          bun lifecycle-smoke.mjs "$smoke/package" | tee "$smoke/bun-lifecycle.log"
+          bun lifecycle-smoke.mjs "$worker" | tee "$smoke/bun-lifecycle.log"
           grep -qx "SMOKE_COMPLETE lifecycle" "$smoke/bun-lifecycle.log"
-          node capabilities-smoke.mjs "$smoke/package" | tee "$smoke/node-capabilities.log"
+          node capabilities-smoke.mjs "$worker" | tee "$smoke/node-capabilities.log"
           grep -qx "SMOKE_COMPLETE capabilities" "$smoke/node-capabilities.log"
-          bun capabilities-smoke.mjs "$smoke/package" | tee "$smoke/bun-capabilities.log"
+          bun capabilities-smoke.mjs "$worker" | tee "$smoke/bun-capabilities.log"
           grep -qx "SMOKE_COMPLETE capabilities" "$smoke/bun-capabilities.log"
       - name: Refuse to republish an existing version
         run: |
