@@ -4,6 +4,7 @@
   "description": "Build/publish tooling for @nyssance/dsh-code-runtime-worker-thread (upstream artifact + Bun TypeScript-stripping fallback)",
   "type": "module",
   "scripts": {
-    "build": "bun build.ts"
+    "build": "bun build.ts",
+    "test": "bun test"
   }
 }
